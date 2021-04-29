@@ -22,7 +22,6 @@ if not op.exists(args.odir): os.makedirs(args.odir)
 pa5 = glob.glob(op.join(args.idir, "*ar5*.npy"))
 pa6 = glob.glob(op.join(args.idir, "*ar6*.npy"))
 
-
 # load pa4
 # data_pa4 = np.hstack([np.load(f) for f in pa4])
 data_pa5 = sort_arr(np.hstack([np.load(f) for f in pa5]))

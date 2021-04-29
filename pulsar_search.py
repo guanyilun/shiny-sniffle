@@ -69,7 +69,7 @@ for omega in tqdm(omegas):
         # => A^2 = 1/(ivar*dt)/sum((I_t)**2)
         A = (np.sum(I_t**2)*dt/var)**-0.5
         # search statistics
-        chisq = dt/var*np.sum((data[1]-data[1].mean())*A*I_t)
+        chisq = dt/var*np.sum(data[1]*A*I_t)
         stats.append([omega, phi, chisq])
 ofile = op.join(args.odir, args.oname)
 print("Writing:", ofile)
