@@ -1,0 +1,3 @@
+# ra[deg] dec[deg] amp[mJy] T[ms] phi[rad]
+-90 -28 100 10 0
+# -90 -28 100 100 0

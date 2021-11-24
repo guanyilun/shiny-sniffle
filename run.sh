@@ -47,8 +47,12 @@
 ####################
 # flux versus time #
 ####################
-python plot_flux_time.py -o plots --sid 0 --oname flux_saga.png --pwv-y 35 --dt-y 37 --xlim "[0,2000]"
+# python plot_flux_time.py -o plots --sid 0 --oname flux_saga.png --pwv-y 35 --dt-y 37 --xlim "[0,2000]"
 # python plot_flux_time.py -o plots --sid 1 --oname flux_mouse.png --pwv-y 2.3 --dt-y 2.6
 # python plot_flux_time.py -o plots --sid 2 --oname flux_s2.png --pwv-y 3 --dt-y 3.1
 # python plot_flux_time.py -o plots --sid 3 --oname flux_s3.png --pwv-y 2.3 --dt-y 2.6
+
+
+# 2021-11-23: start to seriously persue this project
+python sim_data2.py 211123_source_list.txt "@211123_todlist.txt" out_test --dataset dr6v3
 
