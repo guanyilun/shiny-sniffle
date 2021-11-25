@@ -1,3 +1,5 @@
+module load enki_yilun
+
 ##############
 # lightcurve #
 ##############
