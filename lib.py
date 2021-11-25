@@ -50,16 +50,16 @@ class PmatPtsrcVar(pmat.PmatPtsrc):
 class PmatTotVar:
     def __init__(self, scan, srcs, ndir=1, perdet=False, sys="cel"):
         # Build source parameter struct for PmatPtsrc
-        # srcs: {dec, ra, amp, omg_c, phi_c} => [nsrc, 5]
+        # srcs: {dec, ra, T, Q, U, omg_c, phi_c} => [nsrc, 7]
         # nparams: dec, ra, T, Q, U, omg_c, phi_c, ibx, iby, ibxy
         self.params = np.zeros([srcs.shape[-1],ndir,scan.ndet if perdet else 1,10],np.float)
-        # dec, ra
-        self.params[:,:,:,:2]  = srcs[::-1,None,None,:2].T
-        # omg_c, phi_c
-        # self.params[:,:,:,5:7] = srcpos[::-1,None,None,3:].T  # actually not needed in init
+        # dec, ra, T, Q, U, omg, phi
+        self.params[:,:,:,0]   = srcs[1,  None,None,:].T  # dec
+        self.params[:,:,:,1]   = srcs[0,  None,None,:].T  # ra
+        self.params[:,:,:,2:7] = srcs[2:7,None,None,:].T  # TQUOP
         # T, Q, U: assume unpolarized: amp -> T
         # default to cmb unit, better to use flux unit later
-        # self.params[:,:,:,2] = srcpos[::-1,None,None,2]   # actually not needed in init
+        # self.params[:,:,:,2] = src[::-1,None,None,2]   # actually not needed in init
         # ibx, iby = 1: circular beam
         self.params[:,:,:,-3:-1] = 1
         self.psrc = PmatPtsrcVar(scan, self.params, sys=sys)
