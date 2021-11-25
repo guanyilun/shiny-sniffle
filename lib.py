@@ -50,13 +50,13 @@ class PmatPtsrcVar(pmat.PmatPtsrc):
 class PmatTotVar:
     def __init__(self, scan, srcs, ndir=1, perdet=False, sys="cel"):
         # Build source parameter struct for PmatPtsrc
-        # srcs: {dec, ra, T, Q, U, omg_c, phi_c} => [nsrc, 7]
-        # nparams: dec, ra, T, Q, U, omg_c, phi_c, ibx, iby, ibxy
-        self.params = np.zeros([srcs.shape[-1],ndir,scan.ndet if perdet else 1,10],np.float)
+        # srcs: {dec, ra, T, Q, U, omg_c, phi_c, D} => [nsrc, 7]
+        # nparams: dec, ra, T, Q, U, omg_c, phi_c, D, ibx, iby, ibxy
+        self.params = np.zeros([srcs.shape[-1],ndir,scan.ndet if perdet else 1,11],np.float)
         # dec, ra, T, Q, U, omg, phi
         self.params[:,:,:,0]   = srcs[1,  None,None,:].T  # dec
         self.params[:,:,:,1]   = srcs[0,  None,None,:].T  # ra
-        self.params[:,:,:,2:7] = srcs[2:7,None,None,:].T  # TQUOP
+        self.params[:,:,:,2:8] = srcs[2:8,None,None,:].T  # TQUOPD
         # T, Q, U: assume unpolarized: amp -> T
         # default to cmb unit, better to use flux unit later
         # self.params[:,:,:,2] = src[::-1,None,None,2]   # actually not needed in init
