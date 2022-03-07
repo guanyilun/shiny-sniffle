@@ -121,6 +121,7 @@ class PmatTot:
 		params[...,2:2+amps.shape[-1]]   = amps
 		self.psrc.forward(tod, params, pmul=pmul)
 		sampcut.gapfill_linear(self.cut, tod, inplace=True)
+		return tod
 	def backward(self, tod, amps=None, pmul=1, ncomp=3):
 		params = self.params.copy()
 		tod = sampcut.gapfill_linear(self.cut, tod, inplace=False, transpose=True)

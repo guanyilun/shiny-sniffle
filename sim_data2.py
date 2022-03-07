@@ -7,7 +7,7 @@ own pointing matrix.
 
 import numpy as np, os, os.path as op
 from enlib import errors, utils as u, config, bench
-from enact import filedb, actscan
+from enact import filedb, actscan, actdata
 import lib
 from matplotlib import pyplot as plt
 
@@ -62,7 +62,7 @@ base_sids = list(base_sids)
 
 for ind in range(len(ids)):
     id = ids[ind]
-    ofile = op.join(args.odir, id.replace(":","_")+".pdf")
+    ofile = op.join(args.odir, id.replace(":","_")+".png")
     # find sources
     sids = lib.get_sids_in_tod(id, srcpos[:,base_sids], bounds[...,ind], base_sids, src_sys=sys, pad=poly_pad)
     if len(sids) == 0:
@@ -85,11 +85,14 @@ for ind in range(len(ids)):
     t0 = u.mjd2ctime(scan.mjd0)
     phi0 = np.mod(phi+t0*omg, 2*np.pi)
     srcs = np.array([srcpos[0], srcpos[1], amps, amps*0, amps*0, omg, phi0, D])
+    # srcs = np.array([srcpos[0], srcpos[1], amps, amps*0, amps*0])
     # build pointing matrix
     P = lib.PmatTotVar(scan, srcs, perdet=False, sys=sys)
+    # P = lib.PmatTot(scan, srcpos[:,sids], perdet=False, sys=sys)
     # project pulsar into the given tod
     # prepare source parameter: [T,Q,U,omega_c,phi_c]
     tod  = P.forward(scan.tod*0, amps)
+    # scan.tod  = P.forward(scan.tod*0, amps)
     # plot tod for debugging
     if 1:
         sel = slice(70350,70850)
@@ -114,6 +117,7 @@ for ind in range(len(ids)):
     # build search space as multiple sources
     # assuming that the search space only contain one source
     omgs = np.linspace(60,80,32)
+    # omgs = np.linspace(60,80,100)  # update: 220209
     phis = np.linspace(0,2*np.pi,32)
     # nsrc = len(omgs) * len(phis)
     # srcs = np.zeros(7, nsrc, dtype=np.float64)
@@ -121,9 +125,14 @@ for ind in range(len(ids)):
     # srcs[1,:] = srcpos[1,None]
     # srcs[2,:] = 1
     # srcs[5:7,:] = 1
-    srcs= np.array([[srcpos[0], srcpos[1], 1, 0, 0, o, p, D[0]] for o in omgs for p in phis]).T
+    # Note that it is important for amp to be 1 to be able to extract the response as its flux. 
+    # srcs= np.array([[srcpos[0], srcpos[1], 1, 0, 0, o, p, D[0]] for o in omgs for p in phis]).T
+    # srcs= np.array([[srcpos[0], srcpos[1], 1, 0, 0, omg, phi0, D]]).T  # use original pointing
+    srcs= np.array([[srcpos[0], srcpos[1], 1, 0, 0, 70.6, 6.13, D]]).T  # use close-enough value
+    # srcs= np.array([[srcpos[0], srcpos[1]]])
     with bench.show("create pointing matrix"):
         P = lib.PmatTotVar(scan, srcs, perdet=False, sys=sys)
+        # P = lib.PmatTot(scan, srcs[:,0], perdet=False, sys=sys)
 
     # I should be able to use the same pointing matrix to do a search
     # of pulsars by treating different period and phases as different
@@ -131,10 +140,11 @@ for ind in range(len(ids)):
     # that a try below
 
     # a factor to convert uK to mJy
-    # beam_area = get_beam_area(scan.beam)
-    # _, uids   = actdata.split_detname(scan.dets) # Argh, stupid detnames
-    # freq      = scan.array_info.info.nom_freq[uids[0]]
-    # fluxconv  = utils.flux_factor(beam_area, freq*1e9)/1e3
+    beam_area = lib.get_beam_area(scan.beam)
+    _, uids   = actdata.split_detname(scan.dets) # Argh, stupid detnames
+    freq      = scan.array_info.info.nom_freq[uids[0]]
+    fluxconv  = u.flux_factor(beam_area, freq*1e9)/1e3
+    print("fluxconv = ", fluxconv)
 
     # prepare pointing matrix and noise model for searching
     # for signal-only test I won't apply any noise model
@@ -147,16 +157,21 @@ for ind in range(len(ids)):
         rhs = P.backward(tod, ncomp=1)
 
     # div (= P'N"P)
-    # tod[:] = 0
-    # P.forward(tod, rhs*0+1)
+    tod[:] = 0
+    P.forward(tod, rhs*0+1)
     # N.apply(scan.tod)
-    # div = P.backward(tod, ncomp=1)
-
+    div = P.backward(tod, ncomp=1)
+    fluxconv = 1
     # get to mJy unit
-    # div /= fluxconv**2
-    # rhs /= fluxcov
-    flux = rhs
-    # dflux = div**-0.5
-    res = np.vstack([srcs[-3:-1], flux.reshape(1,-1)])
-    np.savetxt('ohf.txt', res.T, header='omg phi amp')
+    div /= fluxconv**2
+    rhs /= fluxconv
+    flux = rhs / div
+    print("flux =",flux)
+    import pdb;pdb.set_trace()
+    dflux = div**-0.5
+    # res = np.vstack([srcs[-3:-1], flux.reshape(1,-1)])
+    res = flux.reshape(1,-1)
+    # np.savetxt('ohf_orig.txt', res.T, header='amp')
+    # np.savetxt('ohf.txt', res.T, header='omg phi amp')
+    # input omg and phi0
     print(f"omg={omg}, phi={phi0}")

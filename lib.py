@@ -87,6 +87,40 @@ class PmatTotVar:
         else: amps[:] = params[...,2:2+amps.shape[-1]]
         return amps
 
+# original
+class PmatTot:
+    def __init__(self, scan, srcpos, ndir=1, perdet=False, sys="cel"):
+        # Build source parameter struct for PmatPtsrc
+        self.params = np.zeros([srcpos.shape[-1],ndir,scan.ndet if perdet else 1,8],np.float)
+        self.params[:,:,:,:2] = srcpos[::-1,None,None,:].T
+        self.params[:,:,:,5:7] = 1
+        self.psrc = pmat.PmatPtsrc(scan, self.params, sys=sys)
+        self.pcut = pmat.PmatCut(scan)
+        # Extract basic offset. Warning: referring to scan.d is fragile, since
+        # scan.d is not updated when scan is sliced
+        self.off0 = scan.d.point_correction
+        self.off  = self.off0*0
+        self.el   = np.mean(scan.boresight[::100,2])
+        self.point_template = scan.d.point_template
+        self.cut = scan.cut
+    def set_offset(self, off):
+        self.off = off*1
+        self.psrc.scan.offsets[:,1:] = actdata.offset_to_dazel(self.point_template + off + self.off0, [0,self.el])
+    def forward(self, tod, amps, pmul=1):
+        # Amps should be [nsrc,ndir,ndet|1,npol]
+        params = self.params.copy()
+        params[...,2:2+amps.shape[-1]]   = amps
+        self.psrc.forward(tod, params, pmul=pmul)
+        sampcut.gapfill_linear(self.cut, tod, inplace=True)
+        return tod
+    def backward(self, tod, amps=None, pmul=1, ncomp=3):
+        params = self.params.copy()
+        tod = sampcut.gapfill_linear(self.cut, tod, inplace=False, transpose=True)
+        self.psrc.backward(tod, params, pmul=pmul)
+        if amps is None: amps = params[...,2:2+ncomp]
+        else: amps[:] = params[...,2:2+amps.shape[-1]]
+        return amps
+
 ###############
 # noise model #
 ###############

@@ -1,3 +1,6 @@
-# ra[deg] dec[deg] amp[mJy] T[ms] phi[rad] D
--90 -28 100 89 0 0.02
-# -90 -28 100 100 0 0.02
+# 220226 update:
+#   - amp[mJy] -> amp[uK] <- I think this is right
+#   - amp of source set to 100 mJy = 9.306 uK at this freq
+# ra[deg] dec[deg] amp[uK] T[ms] phi[rad] D
+# -90 -28 9.306 89 0 0.1
+-90 -28 1 89 0 0.3
